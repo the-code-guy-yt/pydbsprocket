@@ -1,5 +1,5 @@
 import asyncio
-from .provider_mapping import get_provider_callable
+from .provider_discovery import get_provider_callable
 from .connections import ConnectionConfig
 
 __active_db_provider = None
