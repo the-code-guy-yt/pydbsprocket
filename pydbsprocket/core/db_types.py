@@ -30,10 +30,6 @@ class OutputParameter(Param):
     def __init__(self, data_type:DataType):
         super().__init__(value=None, data_type=data_type)
     
-    @property
-    def value(self):
-        return self._value
-    
 class InputCollectionParameter(Param):
     def __init__(self, value, data_type: DataType|str):
         super().__init__(value=value, data_type=data_type)

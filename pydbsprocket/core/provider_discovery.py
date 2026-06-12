@@ -1,7 +1,8 @@
 import importlib
 from typing import Callable
 
-db_provider_mapper={}
+_pending_provider = None
+_db_provider_registry={}
 
 '''
 Discovers Providers
@@ -11,13 +12,27 @@ The provider __init__.py is responsible for registering its callable with the db
 This is only ever called by db init which is protected by a lock so it is assumed no lock is required here
 '''
 
+def _raise_provider_not_implemented(provider_name):
+    global _pending_provider
+    _pending_provider = None
+    raise RuntimeError(f"Provider {provider_name} Not Implemented")
+
+def register_provider(provider_class: Callable):
+    global _db_provider_registry
+    global _pending_provider
+    _db_provider_registry[_pending_provider] = provider_class
+    _pending_provider = None
+
 def get_provider_callable(provider_name: str) -> Callable:
-    if provider_name not in db_provider_mapper:
+    global _pending_provider
+
+    if provider_name not in _db_provider_registry:
         try:
+            _pending_provider = provider_name
             importlib.import_module(f"pydbsprocket.data_providers.{provider_name}")
         except ImportError:
-            raise RuntimeError(f"Provider {provider_name} Not Implemented")
-    provider = db_provider_mapper.get(provider_name, None)
+            _raise_provider_not_implemented(provider_name)
+    provider = _db_provider_registry.get(provider_name, None)
     if provider is None:
-        raise RuntimeError(f"Provider {provider_name} Not Implemented")
+        _raise_provider_not_implemented(provider_name)
     return provider
